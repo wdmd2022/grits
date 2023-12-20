@@ -1,6 +1,10 @@
 import re
 from bs4 import BeautifulSoup
 import pandas as pd
+import os
+import mysql.connector
+import time
+
 
 
 # define a function to check that our database has been created
@@ -23,7 +27,7 @@ psalms_data = []
 stanzas_data = []
 
 for psalm_num in range(1, 151):
-    file_path = f'./data_sources/psalm-{str(psalm_num).zfill(2)}.html'
+    file_path = f'/data_sources/psalm-{str(psalm_num).zfill(2)}.html'
 
     with open(file_path, 'r', encoding='utf-8') as file:
         html_content = file.read()

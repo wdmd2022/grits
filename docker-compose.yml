@@ -28,13 +28,13 @@ services:
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: mydatabase
     volumes:
-      - .:/app
+      - ./api:/app
     depends_on:
       - db
 
   frontend:
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile.frontend
     ports:
       - "80:80"

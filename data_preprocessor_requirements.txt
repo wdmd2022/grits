@@ -2,3 +2,4 @@ pandas
 mysql-connector-python
 sqlalchemy
 openpyxl
+bs4
