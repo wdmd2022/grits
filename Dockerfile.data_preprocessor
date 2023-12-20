@@ -1,0 +1,11 @@
+FROM python:3.10
+
+WORKDIR /data_preprocessor
+
+COPY data_preprocessor_requirements.txt .
+RUN pip install --no-cache-dir -r data_preprocessor_requirements.txt
+
+COPY data_preprocessor_script.py .
+COPY data_sources /data_sources
+
+CMD ["python", "data_preprocessor_script.py"]
