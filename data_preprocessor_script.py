@@ -24,6 +24,13 @@ def first_connect_to_the_database():
 my_connection = first_connect_to_the_database()
 print("awesome we did it")
 
+# let's make a function to help us normalize our text data
+def normalize_text(text):
+    # turn multiple spaces into a single space
+    text = re.sub(' +', ' ', text)
+    # strip leading and trailing spaces on return
+    return text.strip()
+
 psalms_data = []
 stanzas_data = []
 
@@ -39,16 +46,17 @@ for psalm_num in range(1, 151):
 
     for pre_tag in pre_tags:
         if re.match(r'\s*1', pre_tag.get_text(strip=True)):
-            stanzas.append(pre_tag.get_text(strip=True))
+            stanza_text = normalize_text(pre_tag.get_text())
+            stanzas.append(stanza_text)
             stanza_count += 1
             stanzas_data.append({
                 'PsalmNumber': psalm_num,
                 'StanzaNumber': stanza_count,
                 'Meter': 'common',
-                'StanzaText': pre_tag.get_text(strip=True)
+                'StanzaText': stanza_text
             })
             for sibling in pre_tag.find_next_siblings('pre'):
-                stanza_text = sibling.get_text(strip=True)
+                stanza_text = normalize_text(sibling.get_text())
                 stanzas.append(stanza_text)
                 stanza_count += 1
                 stanzas_data.append({
@@ -149,4 +157,4 @@ stanzas_df.to_sql(
     index=False
 )
 
-# data is in, you are a winner
+print("data is in, you are a winner")
