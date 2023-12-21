@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
 from flask_cors import CORS
+import json
+from flask_redis import FlaskRedis
 
 ##############################################################################
 ######################### let's serve up an API! #############################
@@ -18,6 +20,8 @@ from flask_cors import CORS
 ##############################################################################
 app = Flask(__name__)
 CORS(app)
+app.config['REDIS_URL'] = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+redis_client = FlaskRedis(app)
 
 ##############################################################################
 ##############################################################################
@@ -61,11 +65,19 @@ class Stanza(db.Model):
 #######  STEP THREE: MAKING THE ROUTES AND FUNCTIONS TO SERVE THE JSON #######
 ##############################################################################
 
-# ALL PSALMS (filterable)
+# ALL PSALMS (filterable, paginate-able)
 # let's define a route to return all psalms, or a filtered set based on length
 # i.e., with a query parameter ?stanzas=[n] where n is a list of ints
+# pagination is available through per_page= and page= query parameters
 @app.route('/api/psalms', methods=['GET'], strict_slashes=False)
 def list_psalms():
+    # first we'll check Redis for a unique cache key based on the query parameters
+    cache_key = f"psalms_data_{request.query_string.decode('utf-8')}"
+    # we'll see if it's possible to grab data from Redis based on the cache_key
+    cached_data = redis_client.get(cache_key)
+    if cached_data:
+        return jsonify(json.loads(cached_data))
+    # BUT, IF NOT IN REDIS, WE WILL GET IT THE OLD-FASHIONED WAY
     # we'll start defining our query (we'll start big and narrow it)
     query = Psalm.query
     # let's look for number-of-stanza based filters
@@ -91,6 +103,7 @@ def list_psalms():
                     "audio": p.Audio,
                     "text": p.PsalmText
                     } for p in psalms_to_return]
+    redis_client.setex(cache_key, 3600, json.dumps(psalms_data))
     return jsonify(psalms_data)
 
 # ONE PSALM
