@@ -119,6 +119,20 @@ CREATE TABLE IF NOT EXISTS stanzas (
 );
 """
 
+# and also one to create our users table, where we will store our api keys
+gimme_a_users_table_plz = """
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    api_key VARCHAR(255) UNIQUE NOT NULL
+);
+"""
+
+make_a_test_user_plz = """
+INSERT INTO users (username, api_key)
+VALUES ('llcooldoug', 't3stk3y1337');
+"""
+
 # and we can use the connection we established earlier to create a cursor and
 # execute our commands. Once that's done, we'll just commit the changes and
 # close that connection before turning to sqlalchemy to enable a super easy upload
@@ -127,6 +141,8 @@ CREATE TABLE IF NOT EXISTS stanzas (
 cursor = my_connection.cursor()
 cursor.execute(gimme_a_psalms_table_plz)
 cursor.execute(gimme_a_stanzas_table_plz)
+cursor.execute(gimme_a_users_table_plz)
+cursor.execute(make_a_test_user_plz)
 my_connection.commit()
 my_connection.close()
 

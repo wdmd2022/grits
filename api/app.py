@@ -4,6 +4,7 @@ import os
 from flask_cors import CORS
 import json
 from flask_redis import FlaskRedis
+from functools import wraps
 
 ##############################################################################
 ######################### let's serve up an API! #############################
@@ -60,16 +61,38 @@ class Stanza(db.Model):
     # and we add a relationship so we can reference the parent psalm directly
     psalm = db.relationship('Psalm', backref=db.backref('stanzas', lazy=True))
 
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(255), unique=True, nullable=False)
+    api_key = db.Column(db.String(255), unique=True, nullable=False)
+
 ##############################################################################
 ##############################################################################
 #######  STEP THREE: MAKING THE ROUTES AND FUNCTIONS TO SERVE THE JSON #######
 ##############################################################################
+
+# first, let's make a decorator that will require an API key for those accessing
+# our service.
+def require_key(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key_header = request.headers.get('X-API-KEY')
+        api_key_url_param = request.args.get('api_key')
+        api_key = api_key_header or api_key_url_param
+        # is it in the database though?
+        user = User.query.filter_by(api_key=api_key).first()
+        if user is None:
+            return jsonify({"error": "You need a present and valid API key, nice try"}), 404
+        return f(*args, **kwargs)
+    return decorated_function
 
 # ALL PSALMS (filterable, paginate-able)
 # let's define a route to return all psalms, or a filtered set based on length
 # i.e., with a query parameter ?stanzas=[n] where n is a list of ints
 # pagination is available through per_page= and page= query parameters
 @app.route('/api/psalms', methods=['GET'], strict_slashes=False)
+@require_key
 def list_psalms():
     # first we'll check Redis for a unique cache key based on the query parameters
     cache_key = f"psalms_data_{request.query_string.decode('utf-8')}"
@@ -109,6 +132,7 @@ def list_psalms():
 # ONE PSALM
 # now let's make a route to return a single specific psalm
 @app.route('/api/psalms/<int:psalm_number>', methods=['GET'], strict_slashes=False)
+@require_key
 def get_psalm(psalm_number):
     # request it from the database
     requested_psalm = Psalm.query.get(psalm_number)
@@ -127,6 +151,7 @@ def get_psalm(psalm_number):
 # ONE STANZA
 # now let's make a route to return a specific stanza from a psalm
 @app.route('/api/psalms/<int:psalm_number>/stanza/<int:stanza_number>', methods=['GET'], strict_slashes=False)
+@require_key
 def get_stanza(psalm_number, stanza_number):
     # request it from the database
     requested_stanza = Stanza.query.filter_by(PsalmNumber=psalm_number, StanzaNumber=stanza_number).first()
