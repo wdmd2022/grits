@@ -72,7 +72,7 @@ for psalm_num in range(1, 151):
         'Meter': 'common',
         'PsalmText': '\n\n'.join(stanzas),
         'Stanzas': stanza_count,
-        'Audio': f'./midi/grits-{stanza_count}.midi'
+        'Audio': f'./audio/grits-{stanza_count}.mp3'
     })
 
 # let's put our lists into dataframes
