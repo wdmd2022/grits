@@ -31,6 +31,15 @@ def normalize_text(text):
     # strip leading and trailing spaces on return
     return text.strip()
 
+# and a function to calculate timestamps for stanzas
+def calculate_timestamp(stanza_number):
+    total_seconds = 0
+    for i in range(1, stanza_number):
+        total_seconds += 11 if i % 2 != 0 else 12
+    minutes = total_seconds // 60
+    seconds = total_seconds % 60
+    return f"[{minutes:02d}:{seconds:02d}.00]"
+
 psalms_data = []
 stanzas_data = []
 
@@ -53,7 +62,8 @@ for psalm_num in range(1, 151):
                 'PsalmNumber': psalm_num,
                 'StanzaNumber': stanza_count,
                 'Meter': 'common',
-                'StanzaText': stanza_text
+                'StanzaText': stanza_text,
+                'Timestamp': calculate_timestamp(stanza_count)
             })
             for sibling in pre_tag.find_next_siblings('pre'):
                 stanza_text = normalize_text(sibling.get_text())
@@ -63,7 +73,8 @@ for psalm_num in range(1, 151):
                     'PsalmNumber': psalm_num,
                     'StanzaNumber': stanza_count,
                     'Meter': 'common',
-                    'StanzaText': stanza_text
+                    'StanzaText': stanza_text,
+                    'Timestamp': calculate_timestamp(stanza_count)
                 })
             break
     psalms_data.append({
@@ -115,6 +126,7 @@ CREATE TABLE IF NOT EXISTS stanzas (
     StanzaNumber INT,
     Meter VARCHAR(50),
     StanzaText TEXT,
+    Timestamp VARCHAR(12),
     FOREIGN KEY (PsalmNumber) REFERENCES psalms(Number)
 );
 """

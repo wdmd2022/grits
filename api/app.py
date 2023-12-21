@@ -58,6 +58,7 @@ class Stanza(db.Model):
     StanzaNumber = db.Column(db.Integer)
     Meter = db.Column(db.String(50))
     StanzaText = db.Column(db.Text)
+    Timestamp = db.Column(db.String(12))
     # and we add a relationship so we can reference the parent psalm directly
     psalm = db.relationship('Psalm', backref=db.backref('stanzas', lazy=True))
 
@@ -86,6 +87,18 @@ def require_key(f):
             return jsonify({"error": "You need a present and valid API key, nice try"}), 404
         return f(*args, **kwargs)
     return decorated_function
+
+# and let's make a route that will validate our users
+@app.route('/api/validate-user', methods=['POST'], strict_slashes=False)
+def validate_user():
+    data = request.get_json()
+    username = data.get('username')
+    api_key = data.get('api_key')
+    user = User.query.filter_by(username=username, api_key=api_key).first()
+    if user:
+        return jsonify({'valid': True, 'api_key': api_key})
+    else:
+        return jsonify({'valid': False}), 401
 
 # ALL PSALMS (filterable, paginate-able)
 # let's define a route to return all psalms, or a filtered set based on length
@@ -162,8 +175,27 @@ def get_stanza(psalm_number, stanza_number):
         "stanza_number": requested_stanza.StanzaNumber,
         "num_stanzas_in_psalm": requested_stanza.psalm.Stanzas if requested_stanza.psalm else 0,
         "meter": requested_stanza.Meter,
+        "timestamp": requested_stanza.Timestamp,
         "stanza_text": requested_stanza.StanzaText
     }
+    return jsonify(stanza_data)
+
+# ALL STANZAS
+# and also a route to return an array of all stanzas associated with a psalm
+@app.route('/api/psalms/<int:psalm_number>/stanzas', methods=['GET'], strict_slashes=False)
+@require_key
+def get_stanzas(psalm_number):
+    stanzas = Stanza.query.filter_by(PsalmNumber=psalm_number).all()
+    if not stanzas:
+        return jsonify({'error': f'Next time try picking a psalm number between 1-150'}), 404
+    stanza_data = [{
+        'psalm_number': stanza.PsalmNumber,
+        'stanza_number': stanza.StanzaNumber,
+        'meter': stanza.Meter,
+        'stanza_text': stanza.StanzaText,
+        'num_stanzas_in_psalm': stanza.psalm.Stanzas if stanza.psalm else 0,
+        'timestamp': stanza.Timestamp
+    } for stanza in stanzas]
     return jsonify(stanza_data)
 
 if __name__ == "__main__":

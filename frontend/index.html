@@ -10,10 +10,60 @@
     <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <title>aww yeah</title>
+    <style>
+        body {
+            background-color: #f8f9fa; /* Light background color */
+        }
+        .container {
+            padding-top: 50px;
+        }
+    </style>
 </head>
 <body>
-<h1>hey world</h1>
-<p>this is a placeholder for my SPA</p>
+    <div class="container">
+        <div id="loginForm" class="my-3">
+            <h2>Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" class="form-control" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="apiKey">API Key:</label>
+                    <input type="password" class="form-control" id="apiKey" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <p id="loginError" class="text-danger d-none"></p>
+            </form>
+        </div>
+        <div id="psalmSelection" class="my-3 d-none">
+            <h2>Select a Psalm</h2>
+            <div class="form-group">
+                <label for="stanzaFilter">Filter by Number of Stanzas:</label>
+                <select class="form-control" id="stanzaFilter">
+                    <option value="">All</option>
+                    <!-- Options will be populated here -->
+                </select>
+            </div>
+            <div id="psalmButtons" class="d-flex flex-wrap">
+                <!-- Psalm buttons will be populated here -->
+            </div>
+        </div>
+        <div id="psalmDisplay" class="my-3 d-none">
+            <h2>Psalm Content</h2>
+            <pre id="psalmContent">
+                <!-- Psalm content will be displayed here -->
+            </pre>
+            <button id="playMusic" class="btn btn-success mt-3">Play Music</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/rabbit-lyrics" type="text/javascript"></script>
+    <script src="main.js"></script>
 </body>
 </html>
