@@ -61,19 +61,28 @@ class Stanza(db.Model):
 #######  STEP THREE: MAKING THE ROUTES AND FUNCTIONS TO SERVE THE JSON #######
 ##############################################################################
 
+# ALL PSALMS (filterable)
 # let's define a route to return all psalms, or a filtered set based on length
 # i.e., with a query parameter ?stanzas=[n] where n is a list of ints
 @app.route('/api/psalms', methods=['GET'], strict_slashes=False)
 def list_psalms():
     # we'll start defining our query (we'll start big and narrow it)
     query = Psalm.query
-    # let's look for filters
+    # let's look for number-of-stanza based filters
     requested_stanzas = request.args.getlist('stanzas')
     # and apply them to the query if they exist, to narrow down the query
     if requested_stanzas:
         query = query.filter(Psalm.Stanzas.in_(requested_stanzas))
-    # now we will actually execute the query and format and return some JSON
-    psalms_to_return = query.all()
+    # then let's look for pagination query parameters
+    page = request.args.get('page', type=int)
+    per_page = request.args.get('per_page', type=int)
+    # and apply them only if they both exist
+    if page is not None and per_page is not None:
+        paginated_psalms = query.paginate(page=page, per_page=per_page, error_out=False)
+        psalms_to_return = paginated_psalms.items
+    else:
+        psalms_to_return = query.all()
+    # now we will format and return some JSON
     psalms_data = [{"number": p.Number,
                     "title": p.Title,
                     "subtitle": p.Subtitle,
@@ -83,6 +92,41 @@ def list_psalms():
                     "text": p.PsalmText
                     } for p in psalms_to_return]
     return jsonify(psalms_data)
+
+# ONE PSALM
+# now let's make a route to return a single specific psalm
+@app.route('/api/psalms/<int:psalm_number>', methods=['GET'], strict_slashes=False)
+def get_psalm(psalm_number):
+    # request it from the database
+    requested_psalm = Psalm.query.get(psalm_number)
+    if requested_psalm is None:
+        return jsonify({"error": "Please pick a number from 1 to 150"}), 404
+    psalm_data = {"number": requested_psalm.Number,
+                    "title": requested_psalm.Title,
+                    "subtitle": requested_psalm.Subtitle,
+                    "meter": requested_psalm.Meter,
+                    "stanzas": requested_psalm.Stanzas,
+                    "audio": requested_psalm.Audio,
+                    "text": requested_psalm.PsalmText
+    }
+    return jsonify(psalm_data)
+
+# ONE STANZA
+# now let's make a route to return a specific stanza from a psalm
+@app.route('/api/psalms/<int:psalm_number>/stanza/<int:stanza_number>', methods=['GET'], strict_slashes=False)
+def get_stanza(psalm_number, stanza_number):
+    # request it from the database
+    requested_stanza = Stanza.query.filter_by(PsalmNumber=psalm_number, StanzaNumber=stanza_number).first()
+    if requested_stanza is None:
+        return jsonify({"error": "I implore you to pick a stanza that exists"}), 404
+    stanza_data = {
+        "psalm_number": requested_stanza.PsalmNumber,
+        "stanza_number": requested_stanza.StanzaNumber,
+        "num_stanzas_in_psalm": requested_stanza.psalm.Stanzas if requested_stanza.psalm else 0,
+        "meter": requested_stanza.Meter,
+        "stanza_text": requested_stanza.StanzaText
+    }
+    return jsonify(stanza_data)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
