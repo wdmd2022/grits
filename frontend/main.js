@@ -73,15 +73,29 @@ function loadPsalmDetails(psalmNumber) {
     });
 }
 
+
+document.getElementById('logoHome').addEventListener('click', function(event) {
+    event.preventDefault();
+    document.getElementById('psalmSelection').classList.remove('d-none');
+    document.getElementById('psalmDisplay').classList.add('d-none');
+});
+
+
+
 function displayPsalmDetails(psalmDetails) {
     const psalmDisplayDiv = document.getElementById('psalmDisplay');
     const psalmContentDiv = document.getElementById('psalmContent');
     // out with the old
     psalmContentDiv.innerHTML = '';
+    document.getElementById('psalmSelection').classList.add('d-none');
     // in with the new
     const title = document.createElement('h3');
     title.textContent = `Psalm ${psalmDetails.number}`;
     psalmContentDiv.appendChild(title);
+    // and a media link
+    const songLink = document.createElement('p')
+    songLink.textContent = psalmDetails.audio;
+    psalmContentDiv.appendChild(songLink);
     // and more new
     const text = document.createElement('p');
     text.textContent = psalmDetails.text;
