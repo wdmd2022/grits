@@ -94,7 +94,7 @@ function displayPsalmDetails(psalmDetails) {
     psalmContentDiv.appendChild(title);
     // and a media link
     const songLink = document.createElement('p')
-    songLink.textContent = psalmDetails.audio;
+    songLink.textContent = psalmDetails.Audio;
     psalmContentDiv.appendChild(songLink);
     // and more new
     const text = document.createElement('p');
